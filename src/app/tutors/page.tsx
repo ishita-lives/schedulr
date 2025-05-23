@@ -1,54 +1,72 @@
+'use client';
+
+import Image from 'next/image';
+import Link from 'next/link';
+
 export default function Tutors() {
   const tutors = [
     {
-      name: "Sarah Johnson",
-      subjects: "English & Literature",
-      experience: "10+ years",
-      qualifications: "M.Ed, B.A. English Literature",
-      description: "Specializes in HSC English preparation and creative writing."
+      name: "Mukesh Gupta",
+      subjects: "Mathematics and Thinking Skills",
+      qualifications: "B.Tech, MBA, International Math Olympiad Gold Medalist",
+      description: "Expert in advanced mathematics and building foundations for primary school exams preparation."
     },
     {
-      name: "Dr. Michael Chen",
-      subjects: "Mathematics",
-      experience: "15+ years",
-      qualifications: "Ph.D. Mathematics, B.Sc (Hons)",
-      description: "Expert in advanced mathematics and selective school preparation."
+      name: "Ishita Gupta",
+      subjects: "English and Thinking Skills",
+      qualifications: "98 ATAR, High Band 6 in HSC English Advanced",
+      description: "Specialises in OC, selective school test preparation, creative writing and essays."
     },
     {
-      name: "Emma Williams",
-      subjects: "Thinking Skills & English",
-      experience: "8+ years",
-      qualifications: "B.Ed, Gifted Education Certification",
-      description: "Specializes in OC and selective school test preparation."
+      name: "Chelsea Onlingchuan",
+      subjects: "English",
+      qualifications: "High School Dux, 98 ATAR and High Band 6 in English Advanced",
+      description: "Specialises in HSC English preparation"
     },
-    // Add more tutors as needed
   ];
 
   return (
     <main className="min-h-screen pt-16">
-      <section className="py-20">
-        <div className="container mx-auto px-4">
-          <h1 className="text-4xl font-bold mb-8 text-center">Our Expert Tutors</h1>
-          <p className="text-gray-700 mb-12 text-center max-w-3xl mx-auto">
-            Our tutors are highly qualified professionals with extensive experience in their respective fields. 
-            They are passionate about education and committed to helping students achieve their academic goals.
-          </p>
+      {/* Hero Section */}
+      <section className="relative py-20 bg-gradient-to-r from-primary to-primary-dark text-white">
+        <div className="absolute inset-0 bg-[url('/images/pattern.png')] opacity-10"></div>
+        <div className="container mx-auto px-4 relative z-10">
+          <div className="text-center max-w-3xl mx-auto">
+            <h1 className="text-4xl md:text-5xl font-bold mb-6">Our Expert Tutors</h1>
+            <p className="text-xl text-gray-100">
+              Learn from experienced educators dedicated to your academic success
+            </p>
+          </div>
+        </div>
+      </section>
 
+      {/* Tutors Section */}
+      <section className="py-20 bg-gray-50">
+        <div className="container mx-auto px-4">
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             {tutors.map((tutor, index) => (
-              <div key={index} className="bg-white rounded-lg shadow-md overflow-hidden">
-                <div className="p-6">
-                  <h3 className="text-xl font-semibold mb-2">{tutor.name}</h3>
-                  <p className="text-primary font-medium mb-4">{tutor.subjects}</p>
+              <div 
+                key={index} 
+                className="group bg-white rounded-lg shadow-md overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 border border-transparent hover:border-purple-200"
+              >
+                <div className="relative h-[280px] overflow-hidden">
+                  <Image
+                    src="/images/teacher_placeholder.png"
+                    alt={tutor.name}
+                    fill
+                    className="object-cover transition-transform duration-300 group-hover:scale-105"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-purple-900/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                </div>
+                <div className="p-6 border-t border-purple-100">
+                  <h3 className="text-xl font-semibold mb-2 text-gray-900 group-hover:text-primary transition-colors">{tutor.name}</h3>
+                  <p className="text-primary font-medium mb-4 group-hover:text-purple-700 transition-colors">{tutor.subjects}</p>
                   
                   <div className="space-y-2 text-gray-700">
-                    <p>
-                      <span className="font-medium">Experience:</span> {tutor.experience}
+                    <p className="group-hover:text-gray-900 transition-colors">
+                      <span className="font-medium text-purple-700">Qualifications:</span> {tutor.qualifications}
                     </p>
-                    <p>
-                      <span className="font-medium">Qualifications:</span> {tutor.qualifications}
-                    </p>
-                    <p className="mt-4">{tutor.description}</p>
+                    <p className="mt-4 group-hover:text-gray-900 transition-colors">{tutor.description}</p>
                   </div>
                 </div>
               </div>
@@ -56,17 +74,20 @@ export default function Tutors() {
           </div>
 
           <div className="mt-16 text-center">
-            <h2 className="text-2xl font-semibold mb-4">Join Our Team</h2>
+            <h2 className="text-2xl font-semibold mb-4 text-gray-900">Join Our Team</h2>
             <p className="text-gray-700 mb-6">
               We're always looking for passionate and qualified tutors to join our team.
               If you're interested in making a difference in students' lives, we'd love to hear from you.
             </p>
-            <button className="bg-primary text-white px-8 py-3 rounded-lg hover:bg-primary/90 transition-colors">
+            <Link 
+              href="/join"
+              className="inline-block bg-primary text-white px-8 py-3 rounded-lg hover:bg-purple-700 transform hover:-translate-y-0.5 transition-all duration-300 hover:shadow-lg"
+            >
               Apply to Teach
-            </button>
+            </Link>
           </div>
         </div>
       </section>
     </main>
-  )
+  );
 } 
