@@ -96,3 +96,104 @@
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
+
+/* Building blocks animations */
+@keyframes blockFloat {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes blockRotate {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes gradientFlow {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.animate-float {
+  animation: blockFloat 3s ease-in-out infinite;
+}
+
+.animate-float-delay-1 {
+  animation: blockFloat 3s ease-in-out infinite;
+  animation-delay: 0.5s;
+}
+
+.animate-float-delay-2 {
+  animation: blockFloat 3s ease-in-out infinite;
+  animation-delay: 1s;
+}
+
+.animate-rotate {
+  animation: blockRotate 20s linear infinite;
+}
+
+.gradient-text {
+  background: linear-gradient(90deg, var(--primary-light), var(--primary), var(--primary-dark));
+  background-size: 200% auto;
+  animation: gradientFlow 3s ease infinite;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-fill-color: transparent;
+}
+
+/* Educational symbols animations */
+@keyframes floatSymbol {
+  0% {
+    transform: translate(0, 0) rotate(0deg);
+  }
+  50% {
+    transform: translate(5px, -10px) rotate(5deg);
+  }
+  100% {
+    transform: translate(0, 0) rotate(0deg);
+  }
+}
+
+.symbol {
+  @apply absolute text-white opacity-20 font-serif select-none pointer-events-none;
+  font-size: 2.5rem;
+}
+
+.symbol-sm {
+  @apply absolute text-white opacity-20 font-serif select-none pointer-events-none;
+  font-size: 1.5rem;
+}
+
+.float-1 {
+  animation: floatSymbol 4s ease-in-out infinite;
+}
+
+.float-2 {
+  animation: floatSymbol 4s ease-in-out infinite;
+  animation-delay: -1s;
+}
+
+.float-3 {
+  animation: floatSymbol 4s ease-in-out infinite;
+  animation-delay: -2s;
+}
+
+.float-4 {
+  animation: floatSymbol 4s ease-in-out infinite;
+  animation-delay: -3s;
+}
