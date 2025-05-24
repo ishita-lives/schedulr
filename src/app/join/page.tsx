@@ -1,9 +1,21 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, ChangeEvent, FormEvent } from 'react';
+
+interface FormData {
+  name: string;
+  email: string;
+  phone: string;
+  subjects: string[];
+  qualifications: string;
+  experience: string;
+  availability: string;
+  resume: File | null;
+  coverLetter: string;
+}
 
 export default function JoinTeam() {
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<FormData>({
     name: '',
     email: '',
     phone: '',
@@ -31,7 +43,7 @@ export default function JoinTeam() {
     'Other'
   ];
 
-  const handleInputChange = (e) => {
+  const handleInputChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
@@ -39,7 +51,7 @@ export default function JoinTeam() {
     }));
   };
 
-  const handleSubjectChange = (subject) => {
+  const handleSubjectChange = (subject: string) => {
     setFormData(prev => ({
       ...prev,
       subjects: prev.subjects.includes(subject)
@@ -48,15 +60,15 @@ export default function JoinTeam() {
     }));
   };
 
-  const handleFileChange = (e) => {
-    const file = e.target.files[0];
+  const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0] || null;
     setFormData(prev => ({
       ...prev,
       resume: file
     }));
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     // Here you would typically send the form data to your backend
     console.log('Form submitted:', formData);
@@ -67,14 +79,14 @@ export default function JoinTeam() {
   return (
     <main className="min-h-screen bg-gray-50">
       {/* Hero Section */}
-      <section className="relative bg-gradient-to-r from-primary to-primary-dark pt-16">
+      <section className="relative bg-gradient-to-r from-primary to-primary-dark">
         <div className="absolute inset-0 bg-[url('/images/pattern.png')] opacity-10"></div>
-        <div className="container mx-auto px-4 py-16 relative">
+        <div className="container mx-auto px-4 py-24 relative">
           <div className="max-w-4xl mx-auto text-center">
-            <h1 className="text-4xl md:text-5xl font-bold text-white mb-6">
+            <h1 className="text-4xl md:text-5xl font-bold text-white mb-8">
               Join Our Teaching Team
             </h1>
-            <p className="text-xl text-primary-light max-w-2xl mx-auto">
+            <p className="text-xl text-primary-light max-w-2xl mx-auto mb-4">
               Share your expertise and help shape the next generation of achievers. 
               We're looking for passionate educators who want to make a difference.
             </p>

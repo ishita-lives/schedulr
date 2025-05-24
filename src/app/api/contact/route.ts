@@ -4,7 +4,7 @@ import nodemailer from 'nodemailer';
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { name, email, phone, message } = body;
+    const { parentName, studentName, email, phone, yearLevel, subjects, message } = body;
 
     // Create transporter
     const transporter = nodemailer.createTransport({
@@ -21,14 +21,19 @@ export async function POST(request: Request) {
     const mailOptions = {
       from: process.env.EMAIL_USER,
       to: "mukesh@ticonsultants.com.au",
-      subject: "New Contact Form Submission - TI Academy",
+      subject: "New Free Trial Request - TI Academy",
       html: `
-        <h2>New Contact Form Submission</h2>
-        <p><strong>Name:</strong> ${name}</p>
+        <h2>New Free Trial Request</h2>
+        <p><strong>Parent's Name:</strong> ${parentName}</p>
+        <p><strong>Student's Name:</strong> ${studentName}</p>
         <p><strong>Email:</strong> ${email}</p>
         <p><strong>Phone:</strong> ${phone}</p>
-        <p><strong>Message:</strong></p>
-        <p>${message}</p>
+        <p><strong>Year Level:</strong> ${yearLevel}</p>
+        <p><strong>Subjects Interested In:</strong></p>
+        <ul>
+          ${subjects.map(subject => `<li>${subject}</li>`).join('')}
+        </ul>
+        ${message ? `<p><strong>Additional Information:</strong></p><p>${message}</p>` : ''}
       `,
     };
 

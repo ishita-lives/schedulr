@@ -12,7 +12,7 @@ const config: Config = {
         primary: {
           DEFAULT: '#6B46C1',
           dark: '#553C9A',
-          light: '#B794F4',
+          light: '#9F7AEA'
         },
         text: {
           DEFAULT: '#2D3748',
@@ -31,7 +31,7 @@ const config: Config = {
         '105': '1.05',
       },
       animation: {
-        'fade-in': 'fadeIn 1s ease-in forwards',
+        'fade-in': 'fadeIn 0.8s ease-out forwards',
         'fade-in-delay': 'fadeIn 1s ease-in 0.5s forwards',
         'fade-in-delay-2': 'fadeIn 1s ease-in 1s forwards',
         'float-slow': 'floatSlow 12s ease-in-out infinite',
@@ -40,6 +40,7 @@ const config: Config = {
         'spin-slow': 'spin 12s linear infinite',
         'spin-reverse': 'spin 10s linear infinite reverse',
         'bounce-gentle': 'bounceGentle 5s ease-in-out infinite',
+        'blob': 'blob 7s infinite',
       },
       keyframes: {
         fadeIn: {
@@ -65,6 +66,20 @@ const config: Config = {
         bounceGentle: {
           '0%, 100%': { transform: 'translateY(0) scale(1)' },
           '50%': { transform: 'translateY(-15px) scale(1.1)' },
+        },
+        blob: {
+          '0%': {
+            transform: 'translate(0px, 0px) scale(1)',
+          },
+          '33%': {
+            transform: 'translate(30px, -50px) scale(1.1)',
+          },
+          '66%': {
+            transform: 'translate(-20px, 20px) scale(0.9)',
+          },
+          '100%': {
+            transform: 'translate(0px, 0px) scale(1)',
+          },
         },
       },
     },

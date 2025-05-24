@@ -26,14 +26,16 @@ export default function Tutors() {
   ];
 
   return (
-    <main className="min-h-screen pt-16">
+    <main className="min-h-screen">
       {/* Hero Section */}
-      <section className="relative py-20 bg-gradient-to-r from-primary to-primary-dark text-white">
+      <section className="relative bg-gradient-to-r from-primary to-primary-dark">
         <div className="absolute inset-0 bg-[url('/images/pattern.png')] opacity-10"></div>
-        <div className="container mx-auto px-4 relative z-10">
-          <div className="text-center max-w-3xl mx-auto">
-            <h1 className="text-4xl md:text-5xl font-bold mb-6">Our Expert Tutors</h1>
-            <p className="text-xl text-gray-100">
+        <div className="container mx-auto px-4 py-24 relative">
+          <div className="max-w-4xl mx-auto text-center">
+            <h1 className="text-4xl md:text-5xl font-bold text-white mb-8">
+             Our Expert Tutors
+            </h1>
+            <p className="text-xl text-primary-light max-w-2xl mx-auto mb-4">
               Learn from experienced educators dedicated to your academic success
             </p>
           </div>
