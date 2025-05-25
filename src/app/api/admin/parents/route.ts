@@ -1,24 +1,29 @@
 import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
-import { getServerSession } from 'next-auth/next';
+import { getServerSession } from 'next-auth';
+import { prisma } from '@/lib/prisma';
 
-const prisma = new PrismaClient();
-
-// Get all authorized parents with their students
-export async function GET(request: Request) {
+// GET /api/admin/parents - Get all parents
+export async function GET() {
   try {
     const session = await getServerSession();
     
-    // Check if user is admin
-    if (!session || session.user.role !== 'ADMIN') {
+    if (!session?.user?.isAdmin) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const parents = await prisma.authorizedParent.findMany({
+    const parents = await prisma.parent.findMany({
       include: {
-        students: true
+        students: {
+          select: {
+            id: true,
+            name: true,
+            grade: true
+          }
+        }
       },
-      orderBy: { createdAt: 'desc' }
+      orderBy: {
+        createdAt: 'desc'
+      }
     });
 
     return NextResponse.json(parents);
@@ -31,100 +36,87 @@ export async function GET(request: Request) {
   }
 }
 
-// Add new authorized parent with their students
+// POST /api/admin/parents - Create a new parent
 export async function POST(request: Request) {
   try {
     const session = await getServerSession();
     
-    // Check if user is admin
-    if (!session || session.user.role !== 'ADMIN') {
+    if (!session?.user?.isAdmin) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const body = await request.json();
-    const { parentName, parentEmail, parentPhone, students } = body;
+    const { name, email, phone } = body;
 
-    // Validate required parent fields
-    if (!parentName || !parentEmail || !parentPhone) {
+    // Validate required fields
+    if (!name || !email || !phone) {
       return NextResponse.json(
-        { error: 'Parent name, email, and phone are required' },
+        { error: 'All fields are required' },
         { status: 400 }
       );
     }
 
-    // Validate students array
-    if (!students || !Array.isArray(students) || students.length === 0) {
+    // Validate email format
+    if (!email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
       return NextResponse.json(
-        { error: 'At least one student is required' },
+        { error: 'Invalid email format' },
         { status: 400 }
       );
     }
 
-    // Check if parent already exists
-    const existingParent = await prisma.authorizedParent.findFirst({
-      where: {
-        OR: [
-          { email: parentEmail },
-          { phone: parentPhone }
-        ]
-      }
+    // Validate phone format
+    if (!phone.match(/^\+?[\d\s-]{8,}$/)) {
+      return NextResponse.json(
+        { error: 'Invalid phone number format' },
+        { status: 400 }
+      );
+    }
+
+    // Check if parent with same email exists
+    const existingParent = await prisma.parent.findUnique({
+      where: { email }
     });
 
     if (existingParent) {
       return NextResponse.json(
-        { error: 'Parent with this email or phone already exists' },
+        { error: 'A parent with this email already exists' },
         { status: 400 }
       );
     }
 
-    // Create parent and students in a transaction
-    const result = await prisma.$transaction(async (prisma) => {
-      // Create parent
-      const parent = await prisma.authorizedParent.create({
-        data: {
-          name: parentName,
-          email: parentEmail,
-          phone: parentPhone,
-        }
-      });
-
-      // Create students
-      const studentPromises = students.map(student => 
-        prisma.authorizedStudent.create({
-          data: {
-            studentName: student.name,
-            grade: student.grade,
-            enrolledClass: student.enrolledClass,
-            parentId: parent.id
+    const parent = await prisma.parent.create({
+      data: {
+        name,
+        email,
+        phone
+      },
+      include: {
+        students: {
+          select: {
+            id: true,
+            name: true,
+            grade: true
           }
-        })
-      );
-
-      const createdStudents = await Promise.all(studentPromises);
-
-      return {
-        parent,
-        students: createdStudents
-      };
+        }
+      }
     });
 
-    return NextResponse.json(result, { status: 201 });
+    return NextResponse.json(parent, { status: 201 });
   } catch (error) {
     console.error('Error creating parent:', error);
     return NextResponse.json(
-      { error: 'Failed to create parent and students' },
+      { error: 'Failed to create parent' },
       { status: 500 }
     );
   }
 }
 
-// Delete authorized parent and their students
-export async function DELETE(request: Request) {
+// PUT /api/admin/parents - Update a parent
+export async function PUT(request: Request) {
   try {
     const session = await getServerSession();
     
-    // Check if user is admin
-    if (!session || session.user.role !== 'ADMIN') {
+    if (!session?.user?.isAdmin) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -138,8 +130,104 @@ export async function DELETE(request: Request) {
       );
     }
 
-    // Delete parent (this will cascade delete their students due to the relation)
-    await prisma.authorizedParent.delete({
+    const body = await request.json();
+    const { name, email, phone } = body;
+
+    // Validate required fields
+    if (!name || !email || !phone) {
+      return NextResponse.json(
+        { error: 'All fields are required' },
+        { status: 400 }
+      );
+    }
+
+    // Validate email format
+    if (!email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
+      return NextResponse.json(
+        { error: 'Invalid email format' },
+        { status: 400 }
+      );
+    }
+
+    // Validate phone format
+    if (!phone.match(/^\+?[\d\s-]{8,}$/)) {
+      return NextResponse.json(
+        { error: 'Invalid phone number format' },
+        { status: 400 }
+      );
+    }
+
+    // Check if another parent has the same email
+    const existingParent = await prisma.parent.findFirst({
+      where: {
+        AND: [
+          { email },
+          { NOT: { id } }
+        ]
+      }
+    });
+
+    if (existingParent) {
+      return NextResponse.json(
+        { error: 'Another parent with this email already exists' },
+        { status: 400 }
+      );
+    }
+
+    const parent = await prisma.parent.update({
+      where: { id },
+      data: {
+        name,
+        email,
+        phone
+      },
+      include: {
+        students: {
+          select: {
+            id: true,
+            name: true,
+            grade: true
+          }
+        }
+      }
+    });
+
+    return NextResponse.json(parent);
+  } catch (error) {
+    console.error('Error updating parent:', error);
+    return NextResponse.json(
+      { error: 'Failed to update parent' },
+      { status: 500 }
+    );
+  }
+}
+
+// DELETE /api/admin/parents - Delete a parent
+export async function DELETE(request: Request) {
+  try {
+    const session = await getServerSession();
+    
+    if (!session?.user?.isAdmin) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get('id');
+
+    if (!id) {
+      return NextResponse.json(
+        { error: 'Parent ID is required' },
+        { status: 400 }
+      );
+    }
+
+    // Delete all associated students first
+    await prisma.student.deleteMany({
+      where: { parentId: id }
+    });
+
+    // Then delete the parent
+    await prisma.parent.delete({
       where: { id }
     });
 

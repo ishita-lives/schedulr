@@ -1,21 +1,30 @@
 import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
-import { getServerSession } from 'next-auth/next';
+import { getServerSession } from 'next-auth';
+import { prisma } from '@/lib/prisma';
 
-const prisma = new PrismaClient();
-
-// Get all authorized students
-export async function GET(request: Request) {
+// GET /api/admin/students - Get all students
+export async function GET() {
   try {
     const session = await getServerSession();
     
-    // Check if user is admin
-    if (!session || session.user.role !== 'ADMIN') {
+    if (!session?.user?.isAdmin) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const students = await prisma.authorizedStudent.findMany({
-      orderBy: { createdAt: 'desc' }
+    const students = await prisma.student.findMany({
+      include: {
+        parent: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            phone: true
+          }
+        }
+      },
+      orderBy: {
+        createdAt: 'desc'
+      }
     });
 
     return NextResponse.json(students);
@@ -28,78 +37,42 @@ export async function GET(request: Request) {
   }
 }
 
-// Add new authorized student
+// POST /api/admin/students - Create a new student
 export async function POST(request: Request) {
   try {
     const session = await getServerSession();
     
-    // Check if user is admin
-    if (!session || session.user.role !== 'ADMIN') {
+    if (!session?.user?.isAdmin) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const body = await request.json();
-    const { 
-      studentName, 
-      grade, 
-      enrolledClass,
-      parentName,
-      parentEmail,
-      parentPhone
-    } = body;
+    const { name, grade, parentId, enrolledClasses } = body;
 
-    // Validate all required fields
-    if (!studentName || !grade || !enrolledClass || !parentName || !parentEmail || !parentPhone) {
+    // Validate required fields
+    if (!name || !grade || !parentId || !enrolledClasses) {
       return NextResponse.json(
         { error: 'All fields are required' },
         { status: 400 }
       );
     }
 
-    // Validate email format
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(parentEmail)) {
-      return NextResponse.json(
-        { error: 'Invalid email format' },
-        { status: 400 }
-      );
-    }
-
-    // Validate phone format (basic validation)
-    const phoneRegex = /^\+?[\d\s-]{8,}$/;
-    if (!phoneRegex.test(parentPhone)) {
-      return NextResponse.json(
-        { error: 'Invalid phone number format' },
-        { status: 400 }
-      );
-    }
-
-    // Check if student with same parent details exists
-    const existingStudent = await prisma.authorizedStudent.findFirst({
-      where: {
-        AND: [
-          { parentEmail },
-          { parentPhone }
-        ]
-      }
-    });
-
-    if (existingStudent) {
-      return NextResponse.json(
-        { error: 'A student with these parent details already exists' },
-        { status: 400 }
-      );
-    }
-
-    // Create new authorized student
-    const student = await prisma.authorizedStudent.create({
+    const student = await prisma.student.create({
       data: {
-        studentName,
+        name,
         grade,
-        enrolledClass,
-        parentName,
-        parentEmail,
-        parentPhone
+        parentId,
+        enrolledClassesJson: JSON.stringify(enrolledClasses)
+      },
+      include: {
+        parent: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            phone: true
+          }
+        }
       }
     });
 
@@ -113,13 +86,12 @@ export async function POST(request: Request) {
   }
 }
 
-// Update authorized student
+// PUT /api/admin/students - Update a student
 export async function PUT(request: Request) {
   try {
     const session = await getServerSession();
     
-    // Check if user is admin
-    if (!session || session.user.role !== 'ADMIN') {
+    if (!session?.user?.isAdmin) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -134,51 +106,24 @@ export async function PUT(request: Request) {
     }
 
     const body = await request.json();
-    const { 
-      studentName, 
-      grade, 
-      enrolledClass,
-      parentName,
-      parentEmail,
-      parentPhone
-    } = body;
+    const { name, grade, enrolledClasses } = body;
 
-    // Validate all required fields
-    if (!studentName || !grade || !enrolledClass || !parentName || !parentEmail || !parentPhone) {
-      return NextResponse.json(
-        { error: 'All fields are required' },
-        { status: 400 }
-      );
-    }
-
-    // Check if another student has the same parent details
-    const existingStudent = await prisma.authorizedStudent.findFirst({
-      where: {
-        AND: [
-          { parentEmail },
-          { parentPhone },
-          { NOT: { id } } // Exclude current student
-        ]
-      }
-    });
-
-    if (existingStudent) {
-      return NextResponse.json(
-        { error: 'Another student with these parent details already exists' },
-        { status: 400 }
-      );
-    }
-
-    // Update student
-    const student = await prisma.authorizedStudent.update({
+    const student = await prisma.student.update({
       where: { id },
       data: {
-        studentName,
+        name,
         grade,
-        enrolledClass,
-        parentName,
-        parentEmail,
-        parentPhone
+        enrolledClassesJson: JSON.stringify(enrolledClasses)
+      },
+      include: {
+        parent: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            phone: true
+          }
+        }
       }
     });
 
@@ -192,13 +137,12 @@ export async function PUT(request: Request) {
   }
 }
 
-// Delete authorized student
+// DELETE /api/admin/students - Delete a student
 export async function DELETE(request: Request) {
   try {
     const session = await getServerSession();
     
-    // Check if user is admin
-    if (!session || session.user.role !== 'ADMIN') {
+    if (!session?.user?.isAdmin) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -212,7 +156,7 @@ export async function DELETE(request: Request) {
       );
     }
 
-    await prisma.authorizedStudent.delete({
+    await prisma.student.delete({
       where: { id }
     });
 
