@@ -58,20 +58,23 @@ async function seedAuthorizedStudents() {
       try {
         console.log(`\nProcessing student: ${student.studentName}`);
         
-        const existingStudent = await prisma.authorizedStudent.findFirst({
+        const existingStudent = await prisma.authorizedParent.findFirst({
           where: {
-            parentEmail: student.parentEmail,
-            parentPhone: student.parentPhone,
-            studentName: student.studentName
+            email: student.parentEmail,
+            phone: student.parentPhone,
+            studentsJson: JSON.stringify([{ name: student.studentName, grade: student.grade }])
           }
         });
 
         if (!existingStudent) {
           console.log(`Creating new student record for ${student.studentName}...`);
-          const { enrolledClasses, ...studentData } = student;
-          const created = await prisma.authorizedStudent.create({
+          const { enrolledClasses } = student;
+          const created = await prisma.authorizedParent.create({
             data: {
-              ...studentData,
+              name: student.parentName,
+              email: student.parentEmail,
+              phone: student.parentPhone,
+              studentsJson: JSON.stringify([{ name: student.studentName, grade: student.grade }]),
               enrolledClassesJson: JSON.stringify(enrolledClasses)
             }
           });
@@ -86,7 +89,7 @@ async function seedAuthorizedStudents() {
     }
 
     // Double check final count
-    const finalCount = await prisma.authorizedStudent.count();
+    const finalCount = await prisma.authorizedParent.count();
     console.log(`\nFinal authorized student count in database: ${finalCount}`);
 
   } catch (error) {

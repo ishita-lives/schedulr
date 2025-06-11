@@ -8,121 +8,135 @@ const prisma = new PrismaClient();
 export async function GET() {
   try {
     const session = await getServerSession(authOptions);
+    console.log('API Session:', session);
 
-    if (!session) {
+    if (!session?.user) {
+      console.log('No session found');
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
       );
     }
 
+    console.log('User role:', session.user.role);
+    console.log('User ID:', session.user.id);
+
     let enrollments;
 
-    switch (session.user.role) {
-      case 'ADMIN':
-        enrollments = await prisma.enrollment.findMany({
-          include: {
-            student: {
-              select: {
-                name: true,
-                parent: {
-                  select: {
-                    name: true,
-                  },
-                },
-              },
-            },
-            class: {
-              include: {
-                teacher: {
-                  include: {
-                    user: {
-                      select: {
-                        name: true,
-                      },
-                    },
-                  },
-                },
-              },
+    // Check if user is a parent
+    if (session.user.isParent) {
+      console.log('Fetching parent enrollments...');
+      enrollments = await prisma.enrollment.findMany({
+        where: {
+          parentStudent: {
+            parent: {
+              userId: session.user.id,
             },
           },
-          orderBy: {
-            createdAt: 'desc',
+        },
+        include: {
+          parentStudent: {
+            select: {
+              studentName: true,
+              grade: true,
+            },
           },
-        });
-        break;
-
-      case 'TEACHER':
-        enrollments = await prisma.enrollment.findMany({
-          where: {
-            class: {
+          class: {
+            include: {
               teacher: {
-                userId: session.user.id,
-              },
-            },
-          },
-          include: {
-            student: {
-              select: {
-                name: true,
-                parent: {
-                  select: {
-                    name: true,
-                  },
-                },
-              },
-            },
-            class: true,
-          },
-          orderBy: {
-            createdAt: 'desc',
-          },
-        });
-        break;
-
-      case 'PARENT':
-        enrollments = await prisma.enrollment.findMany({
-          where: {
-            student: {
-              parentId: session.user.id,
-            },
-          },
-          include: {
-            student: {
-              select: {
-                name: true,
-              },
-            },
-            class: {
-              include: {
-                teacher: {
-                  include: {
-                    user: {
-                      select: {
-                        name: true,
-                      },
+                include: {
+                  user: {
+                    select: {
+                      name: true,
                     },
                   },
                 },
               },
             },
           },
-          orderBy: {
-            createdAt: 'desc',
+        },
+        orderBy: {
+          createdAt: 'desc',
+        },
+      });
+      console.log('Found enrollments:', enrollments);
+    }
+    // Check if user is an admin
+    else if (session.user.isAdmin) {
+      enrollments = await prisma.enrollment.findMany({
+        include: {
+          parentStudent: {
+            select: {
+              studentName: true,
+              grade: true,
+              parent: {
+                select: {
+                  name: true,
+                  email: true,
+                },
+              },
+            },
           },
-        });
-        break;
-
-      default:
-        return NextResponse.json(
-          { error: 'Invalid user role' },
-          { status: 403 }
-        );
+          class: {
+            include: {
+              teacher: {
+                include: {
+                  user: {
+                    select: {
+                      name: true,
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+        orderBy: {
+          createdAt: 'desc',
+        },
+      });
+    }
+    // Check if user is a teacher
+    else if (session.user.isTeacher) {
+      enrollments = await prisma.enrollment.findMany({
+        where: {
+          class: {
+            teacher: {
+              userId: session.user.id,
+            },
+          },
+        },
+        include: {
+          parentStudent: {
+            select: {
+              studentName: true,
+              grade: true,
+              parent: {
+                select: {
+                  name: true,
+                  email: true,
+                },
+              },
+            },
+          },
+          class: true,
+        },
+        orderBy: {
+          createdAt: 'desc',
+        },
+      });
+    }
+    else {
+      console.log('Invalid role:', session.user.role);
+      return NextResponse.json(
+        { error: 'Invalid user role' },
+        { status: 403 }
+      );
     }
 
     return NextResponse.json(enrollments);
   } catch (error) {
-    console.error('Error fetching enrollments:', error);
+    console.error('Error in enrollments API:', error);
     return NextResponse.json(
       { error: 'Failed to fetch enrollments' },
       { status: 500 }

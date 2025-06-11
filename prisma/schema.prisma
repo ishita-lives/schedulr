@@ -14,7 +14,7 @@ model User {
   email                 String       @unique
   password              String
   phone                 String?      @unique
-  role                  String       @default("PARENT") // ADMIN, TEACHER, PARENT, STUDENT
+  role                  String       @default("PARENT") // ADMIN, TEACHER, PARENT
   status               String       @default("PENDING") // PENDING, ACTIVE, SUSPENDED
   verificationToken     String?      @unique
   verificationTokenExpiry DateTime?
@@ -24,10 +24,22 @@ model User {
   adminProfile          Admin?       // Link to admin profile if role is ADMIN
   appointments         Appointment[]
   teacherProfile       Teacher?
-  studentProfile       Student[]
   tutorAppointments    Appointment[] @relation("TutorAppointments")
+  parentStudents      ParentStudent[] // Students under this parent
   createdAt            DateTime     @default(now())
   updatedAt            DateTime     @updatedAt
+}
+
+model ParentStudent {
+  id                String   @id @default(cuid())
+  parent            User     @relation(fields: [parentId], references: [id])
+  parentId          String
+  studentName       String
+  grade             String
+  dateOfBirth       DateTime?
+  enrollments       Enrollment[]
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
 }
 
 model Appointment {
@@ -41,20 +53,6 @@ model Appointment {
   tutor     User     @relation("TutorAppointments", fields: [tutorId], references: [id])
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-}
-
-model Student {
-  id                String   @id @default(cuid())
-  name              String
-  grade             String
-  verificationStatus String   @default("PENDING") // PENDING, VERIFIED, REJECTED
-  parent            User     @relation(fields: [parentId], references: [id])
-  parentId          String
-  
-  // Relations
-  enrollments       Enrollment[]
-  createdAt         DateTime    @default(now())
-  updatedAt         DateTime    @updatedAt
 }
 
 model Teacher {
@@ -99,11 +97,11 @@ model Class {
 }
 
 model Enrollment {
-  id        String   @id @default(cuid())
-  student   Student  @relation(fields: [studentId], references: [id])
-  studentId String
-  class     Class    @relation(fields: [classId], references: [id])
-  classId   String
+  id              String   @id @default(cuid())
+  parentStudent   ParentStudent  @relation(fields: [parentStudentId], references: [id])
+  parentStudentId String
+  class           Class    @relation(fields: [classId], references: [id])
+  classId         String
   
   // Relations
   scheduleChanges ScheduleChange[]
@@ -126,30 +124,25 @@ model ScheduleChange {
   updatedAt     DateTime          @updatedAt
 }
 
-model AuthorizedStudent {
+model AuthorizedParent {
   id            String   @id @default(cuid())
-  studentName   String
-  grade         String
+  name          String
+  email         String
+  phone         String
+  studentsJson  String   // JSON array of student details: [{"name": "John", "grade": "5"}]
   enrolledClassesJson String   // JSON array of classes: ["ENGLISH", "MATHEMATICS", "THINKING_SKILLS"]
-  
-  // Parent details stored directly with student
-  parentName    String
-  parentEmail   String
-  parentPhone   String
-  
   isRegistered  Boolean  @default(false)
   registeredUserId String? // Will be filled when they register
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
-  @@unique([parentEmail, parentPhone]) // Ensure unique combination of parent contact details
+  @@unique([email, phone]) // Ensure unique combination of parent contact details
 }
 
 enum UserRole {
   ADMIN
   TEACHER
   PARENT
-  STUDENT
 }
 
 enum ScheduleStatus {

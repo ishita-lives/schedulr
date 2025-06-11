@@ -6,8 +6,8 @@ import { useSession } from 'next-auth/react';
 
 interface Enrollment {
   id: string;
-  student: {
-    name: string;
+  parentStudent: {
+    studentName: string;
   };
   class: {
     subject: string;
@@ -27,6 +27,7 @@ export default function RequestChange() {
   const { data: session } = useSession();
   const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     enrollmentId: '',
     requestedDate: '',
@@ -38,16 +39,39 @@ export default function RequestChange() {
   useEffect(() => {
     const fetchEnrollments = async () => {
       try {
+        console.log('Fetching enrollments...');
         const response = await fetch('/api/enrollments');
+        console.log('Response status:', response.status);
+        
+        if (!response.ok) {
+          const errorData = await response.json();
+          console.error('API Error:', errorData);
+          throw new Error(errorData.error || 'Failed to fetch enrollments');
+        }
+        
         const data = await response.json();
-        setEnrollments(data);
+        console.log('Received data:', data);
+        
+        if (Array.isArray(data)) {
+          setEnrollments(data);
+        } else {
+          console.error('Invalid data format:', data);
+          setError('Invalid data format received');
+        }
       } catch (error) {
         console.error('Error fetching enrollments:', error);
+        setError(error instanceof Error ? error.message : 'Failed to load enrollments. Please try again later.');
       }
     };
 
-    fetchEnrollments();
-  }, []);
+    if (session?.user) {
+      console.log('Session user:', session.user);
+      fetchEnrollments();
+    } else {
+      console.log('No session user found');
+      setError('Please sign in to view your enrollments');
+    }
+  }, [session]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -105,6 +129,24 @@ export default function RequestChange() {
     });
   };
 
+  if (error) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="max-w-2xl mx-auto">
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+            <p className="text-red-800">{error}</p>
+            <button
+              onClick={() => window.location.reload()}
+              className="mt-2 text-red-600 hover:text-red-800 font-medium"
+            >
+              Try Again
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="max-w-2xl mx-auto">
@@ -126,7 +168,7 @@ export default function RequestChange() {
               <option value="">Select a class</option>
               {enrollments.map((enrollment) => (
                 <option key={enrollment.id} value={enrollment.id}>
-                  {enrollment.student.name} - {enrollment.class.subject} ({getDayName(enrollment.class.dayOfWeek)}{' '}
+                  {enrollment.parentStudent.studentName} - {enrollment.class.subject} ({getDayName(enrollment.class.dayOfWeek)}{' '}
                   {formatTime(enrollment.class.startTime)} - {formatTime(enrollment.class.endTime)})
                 </option>
               ))}

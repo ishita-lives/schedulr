@@ -1,10 +1,9 @@
 import NextAuth from "next-auth";
-import { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { compare } from 'bcryptjs';
 import { prisma } from '@/lib/prisma';
 
-const handler = NextAuth({
+const authOptions = {
   providers: [
     CredentialsProvider({
       name: "Credentials",
@@ -23,8 +22,7 @@ const handler = NextAuth({
           },
           include: {
             adminProfile: true,
-            teacherProfile: true,
-            studentProfile: true
+            teacherProfile: true
           }
         });
 
@@ -69,23 +67,31 @@ const handler = NextAuth({
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
+        token.id = user.id;
         token.role = user.role;
         token.isAdmin = user.isAdmin;
         token.isTeacher = user.isTeacher;
         token.isParent = user.isParent;
+        token.name = user.name;
+        token.email = user.email;
       }
       return token;
     },
     async session({ session, token }) {
       if (session?.user) {
+        session.user.id = token.id;
         session.user.role = token.role;
         session.user.isAdmin = token.isAdmin;
         session.user.isTeacher = token.isTeacher;
         session.user.isParent = token.isParent;
+        session.user.name = token.name;
+        session.user.email = token.email;
       }
       return session;
     }
   },
-});
+};
 
-export { handler as GET, handler as POST }; 
+const handler = NextAuth(authOptions);
+
+export { handler as GET, handler as POST, authOptions }; 
