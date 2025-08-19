@@ -1,26 +1,299 @@
-@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
+@layer base {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --primary: #6B46C1;
+    --primary-dark: #553C9A;
+    --primary-light: #9F7AEA;
+    --secondary: #F7FAFC;
+    --text: #2D3748;
+    --text-light: #4A5568;
+  }
+
+  body {
+    @apply bg-gray-50 text-text;
+    font-family: 'Inter', sans-serif;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@layer components {
+  .btn-primary {
+    @apply bg-primary text-white px-6 py-3 rounded-lg font-semibold transition-all duration-300;
+  }
+
+  .btn-primary:hover {
+    @apply bg-primary-dark transform scale-105;
+  }
+
+  .card {
+    @apply p-6 rounded-lg border border-gray-100 shadow-sm bg-white transition-all duration-300;
+  }
+
+  .card:hover {
+    @apply shadow-md transform scale-[1.02];
+  }
+}
+
+@layer utilities {
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .animate-fade-in {
+    animation: fadeIn 0.8s ease-out forwards;
+  }
+
+  .animate-fade-in-delay {
+    opacity: 0;
+    animation: fadeIn 0.8s ease-out forwards;
+    animation-delay: 0.2s;
+  }
+
+  .animate-fade-in-delay-2 {
+    opacity: 0;
+    animation: fadeIn 0.8s ease-out forwards;
+    animation-delay: 0.4s;
+  }
+
+  .gradient-bg {
+    @apply bg-gradient-to-r from-primary to-primary-dark;
+  }
+
+  .text-gradient {
+    @apply bg-gradient-to-r from-primary to-primary-light bg-clip-text text-transparent;
+  }
+
+  .animation-delay-2000 {
+    animation-delay: 2s;
+  }
+  .animation-delay-4000 {
+    animation-delay: 4s;
+  }
+  .animation-delay-6000 {
+    animation-delay: 6s;
+  }
+}
+
+/* Interactive Elements */
+.hover-lift {
+  @apply transition-transform duration-300 hover:scale-105;
+}
+
+.hover-shadow {
+  @apply transition-shadow duration-300 hover:shadow-lg;
+}
+
+.hover-glow {
+  @apply transition-all duration-300;
+}
+
+.hover-glow:hover {
+  box-shadow: 0 0 20px rgba(107, 70, 193, 0.2);
+}
+
+.hero-text {
+  @apply text-4xl md:text-6xl font-bold;
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Building blocks animations */
+@keyframes blockFloat {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes blockRotate {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes gradientFlow {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.animate-float {
+  animation: blockFloat 3s ease-in-out infinite;
+}
+
+.animate-float-delay-1 {
+  animation: blockFloat 3s ease-in-out infinite;
+  animation-delay: 0.5s;
+}
+
+.animate-float-delay-2 {
+  animation: blockFloat 3s ease-in-out infinite;
+  animation-delay: 1s;
+}
+
+.animate-rotate {
+  animation: blockRotate 20s linear infinite;
+}
+
+.gradient-text {
+  background: linear-gradient(90deg, var(--primary-light), var(--primary), var(--primary-dark));
+  background-size: 200% auto;
+  animation: gradientFlow 3s ease infinite;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-fill-color: transparent;
+}
+
+/* Educational symbols animations */
+@keyframes floatSymbol {
+  0% {
+    transform: translate(0, 0) rotate(0deg);
+  }
+  50% {
+    transform: translate(5px, -10px) rotate(5deg);
+  }
+  100% {
+    transform: translate(0, 0) rotate(0deg);
+  }
+}
+
+.symbol {
+  @apply absolute text-white opacity-20 font-serif select-none pointer-events-none;
+  font-size: 2.5rem;
+}
+
+.symbol-sm {
+  @apply absolute text-white opacity-20 font-serif select-none pointer-events-none;
+  font-size: 1.5rem;
+}
+
+.float-1 {
+  animation: floatSymbol 4s ease-in-out infinite;
+}
+
+.float-2 {
+  animation: floatSymbol 4s ease-in-out infinite;
+  animation-delay: -1s;
+}
+
+.float-3 {
+  animation: floatSymbol 4s ease-in-out infinite;
+  animation-delay: -2s;
+}
+
+.float-4 {
+  animation: floatSymbol 4s ease-in-out infinite;
+  animation-delay: -3s;
+}
+
+/* Animation Classes */
+.symbol {
+  @apply opacity-30 absolute;
+  will-change: transform;
+}
+
+/* Ensure animations are applied */
+@keyframes floatSlow {
+  0%, 100% { transform: translateY(0) translateX(0) rotate(0); }
+  25% { transform: translateY(-20px) translateX(15px) rotate(5deg); }
+  50% { transform: translateY(0) translateX(30px) rotate(0); }
+  75% { transform: translateY(20px) translateX(15px) rotate(-5deg); }
+}
+
+@keyframes floatMedium {
+  0%, 100% { transform: translateY(0) translateX(0) scale(1); }
+  33% { transform: translateY(-15px) translateX(-15px) scale(1.1); }
+  66% { transform: translateY(15px) translateX(15px) scale(0.9); }
+}
+
+@keyframes floatFast {
+  0%, 100% { transform: translateY(0) translateX(0) rotate(0); }
+  25% { transform: translateY(-10px) translateX(-10px) rotate(-5deg); }
+  75% { transform: translateY(10px) translateX(10px) rotate(5deg); }
+}
+
+@keyframes bounceGentle {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-15px) scale(1.1); }
+}
+
+.animate-float-slow {
+  animation: floatSlow 12s ease-in-out infinite;
+}
+
+.animate-float-medium {
+  animation: floatMedium 8s ease-in-out infinite;
+}
+
+.animate-float-fast {
+  animation: floatFast 6s ease-in-out infinite;
+}
+
+.animate-bounce-gentle {
+  animation: bounceGentle 5s ease-in-out infinite;
+}
+
+.animate-spin-slow {
+  animation: spin 12s linear infinite;
+}
+
+.animate-spin-reverse {
+  animation: spin 10s linear infinite reverse;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Fade in animations */
+@keyframes fadeIn {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 1s ease-in forwards;
+}
+
+.animate-fade-in-delay {
+  animation: fadeIn 1s ease-in 0.5s forwards;
+  opacity: 0;
+}
+
+.animate-fade-in-delay-2 {
+  animation: fadeIn 1s ease-in 1s forwards;
+  opacity: 0;
 }

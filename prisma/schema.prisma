@@ -1,0 +1,153 @@
+// This is your Prisma schema file
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model User {
+  id                    String       @id @default(cuid())
+  name                  String
+  email                 String       @unique
+  password              String
+  phone                 String?      @unique
+  role                  String       @default("PARENT") // ADMIN, TEACHER, PARENT
+  status               String       @default("PENDING") // PENDING, ACTIVE, SUSPENDED
+  verificationToken     String?      @unique
+  verificationTokenExpiry DateTime?
+  lastLoginAt          DateTime?
+  failedLoginAttempts  Int          @default(0)
+  isVerified            Boolean      @default(false)
+  adminProfile          Admin?       // Link to admin profile if role is ADMIN
+  appointments         Appointment[]
+  teacherProfile       Teacher?
+  tutorAppointments    Appointment[] @relation("TutorAppointments")
+  parentStudents      ParentStudent[] // Students under this parent
+  createdAt            DateTime     @default(now())
+  updatedAt            DateTime     @updatedAt
+}
+
+model ParentStudent {
+  id                String   @id @default(cuid())
+  parent            User     @relation(fields: [parentId], references: [id])
+  parentId          String
+  studentName       String
+  grade             String
+  dateOfBirth       DateTime?
+  enrollments       Enrollment[]
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
+
+model Appointment {
+  id        String   @id @default(cuid())
+  date      DateTime
+  subject   String
+  userId    String
+  tutorId   String
+  status    String   @default("pending")
+  user      User     @relation(fields: [userId], references: [id])
+  tutor     User     @relation("TutorAppointments", fields: [tutorId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Teacher {
+  id                String   @id @default(cuid())
+  user              User     @relation(fields: [userId], references: [id])
+  userId            String   @unique
+  subjectsJson      String   // JSON array of subjects they teach
+  bio               String?
+  verificationStatus String   @default("PENDING") // PENDING, VERIFIED, REJECTED
+  documentsJson     String?  // JSON array of document URLs for verification
+  
+  // Relations
+  classes           Class[]
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
+
+model Admin {
+  id            String   @id @default(cuid())
+  user          User     @relation(fields: [userId], references: [id])
+  userId        String   @unique
+  permissionsJson String  // JSON array of permissions
+  createdBy     String?  // ID of admin who created this admin
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model Class {
+  id          String   @id @default(cuid())
+  subject     String
+  teacher     Teacher  @relation(fields: [teacherId], references: [id])
+  teacherId   String
+  dayOfWeek   Int      // 0-6 for Sunday-Saturday
+  startTime   DateTime
+  endTime     DateTime
+  maxStudents Int
+  
+  // Relations
+  enrollments Enrollment[]
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+}
+
+model Enrollment {
+  id              String   @id @default(cuid())
+  parentStudent   ParentStudent  @relation(fields: [parentStudentId], references: [id])
+  parentStudentId String
+  class           Class    @relation(fields: [classId], references: [id])
+  classId         String
+  
+  // Relations
+  scheduleChanges ScheduleChange[]
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+}
+
+model ScheduleChange {
+  id            String            @id @default(cuid())
+  enrollment    Enrollment        @relation(fields: [enrollmentId], references: [id])
+  enrollmentId  String
+  requestedDate DateTime
+  oldStartTime  DateTime
+  oldEndTime    DateTime
+  newStartTime  DateTime
+  newEndTime    DateTime
+  status        String            @default("PENDING") // PENDING, APPROVED, REJECTED, CANCELLED
+  reason        String?
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+}
+
+model AuthorizedParent {
+  id            String   @id @default(cuid())
+  name          String
+  email         String
+  phone         String
+  studentsJson  String   // JSON array of student details: [{"name": "John", "grade": "5"}]
+  enrolledClassesJson String   // JSON array of classes: ["ENGLISH", "MATHEMATICS", "THINKING_SKILLS"]
+  isRegistered  Boolean  @default(false)
+  registeredUserId String? // Will be filled when they register
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@unique([email, phone]) // Ensure unique combination of parent contact details
+}
+
+enum UserRole {
+  ADMIN
+  TEACHER
+  PARENT
+}
+
+enum ScheduleStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELLED
+} 
