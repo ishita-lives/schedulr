@@ -1,4 +1,5 @@
 import { PrismaClient } from '@prisma/client';
+// using prisma and postreSQL
 
 const prisma = new PrismaClient();
 
